@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Watch Face Layout</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .container { text-align: center; }
+    h1 { color: #fff; margin-bottom: 20px; }
+    svg {
+      background: #000;
+      border-radius: 50%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .legend {
+      color: #fff;
+      margin-top: 30px;
+      text-align: left;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    /* Icons in SVG */
+    .metric-icon {
+      opacity: 0.95;
+      /* If your icons are white, they’ll look great on black without filters */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Dashboard Watch Face Layout</h1>
+
+    <svg width="400" height="400" viewBox="0 0 400 400" id="wf">
+  <!-- Background -->
+  <circle cx="200" cy="200" r="200" fill="#ffffff"/>
+
+  <!-- Outer watch case -->
+  <circle cx="200" cy="200" r="195" fill="none" stroke="#333" stroke-width="2"/>
+
+  <!-- Hour markers -->
+  <circle cx="200" cy="30" r="3" fill="#555"/>
+  <circle cx="370" cy="200" r="3" fill="#555"/>
+  <circle cx="200" cy="370" r="3" fill="#555"/>
+  <circle cx="30" cy="200" r="3" fill="#555"/>
+
+  <!-- Where gauges will be injected -->
+  <g id="gauges"></g>
+
+  <!-- Center Time Display -->
+  <rect x="155" y="170" width="90" height="60" rx="8" fill="#111" stroke="#333" stroke-width="2"/>
+  <text x="200" y="200" fill="#fff" font-size="32" text-anchor="middle" font-weight="bold" font-family="monospace">12:57</text>
+  <text x="200" y="220" fill="#888" font-size="11" text-anchor="middle">THU 11 07</text>
+</svg>
+
+<script>
+  const cx = 200;
+  const cy = 200;
+
+  // Tune these two numbers to match your “feel”
+  const ringRadius  = 135;  // distance from center to each gauge center
+  const gaugeRadius = 35;   // radius of each small gauge
+  const strokeW     = 8;
+
+  // For the colored arc. 0..1
+  const data = [
+    { key: "steps",    color: "#FF8000", value: "4602",  icon: "resources/icons/ic_steps.png",    progress: 0.20, iconOffset: {x: 0,  y: -53} },
+    { key: "cal",      color: "#0080FF", value: "230",   icon: "resources/icons/ic_cal.png",      progress: 0.70, iconOffset: {x: 0,  y: -53} },
+    { key: "battery",  color: "#00FFFF", value: "74%",   icon: "resources/icons/ic_battery.png",  progress: 0.74, iconOffset: {x: 53, y:  0}  },
+    { key: "vo2",      color: "#A020F0", value: "121",   icon: "resources/icons/ic_vo2.png",      progress: 0.65, iconOffset: {x: 0,  y:  53} },
+    { key: "body",     color: "#00FF80", value: "44%",   icon: "resources/icons/ic_body.png",     progress: 0.15, iconOffset: {x: 0,  y:  53} },
+    { key: "stress",   color: "#FFFF00", value: "2.3",   icon: "resources/icons/ic_stress.png",   progress: 0.12, iconOffset: {x: 0,  y:  53} },
+    { key: "hr",       color: "#FF0040", value: "80",    icon: "resources/icons/ic_hr.png",       progress: 0.50, iconOffset: {x: -53,y:  0}  },
+    { key: "recovery", color: "#FF1493", value: "8",     icon: "resources/icons/ic_recovery.png", progress: 0.10, iconOffset: {x: 0,  y: -53} },
+  ];
+
+  function degToRad(d) { return (d * Math.PI) / 180; }
+
+  // SVG arc path for a circle segment
+  function arcPath(x, y, r, startDeg, endDeg) {
+    const start = degToRad(startDeg);
+    const end   = degToRad(endDeg);
+
+    const x1 = x + r * Math.cos(start);
+    const y1 = y + r * Math.sin(start);
+    const x2 = x + r * Math.cos(end);
+    const y2 = y + r * Math.sin(end);
+
+    const largeArc = (endDeg - startDeg) % 360 > 180 ? 1 : 0;
+
+    return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+  }
+
+  const g = document.getElementById("gauges");
+
+  data.forEach((m, i) => {
+    // 8 positions around the ring (top = -90°, then clockwise)
+    const angle = -90 + i * 45;
+    const a = degToRad(angle);
+    const gx = cx + ringRadius * Math.cos(a);
+    const gy = cy + ringRadius * Math.sin(a);
+
+    // Base ring
+    const base = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    base.setAttribute("cx", gx);
+    base.setAttribute("cy", gy);
+    base.setAttribute("r", gaugeRadius);
+    base.setAttribute("fill", "none");
+    base.setAttribute("stroke", "#2A2A2A");
+    base.setAttribute("stroke-width", strokeW);
+    g.appendChild(base);
+
+    // Colored arc (start at top of the small gauge)
+    const startDeg = -90;
+    const endDeg = startDeg + (m.progress * 360);
+
+    const arc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arc.setAttribute("d", arcPath(gx, gy, gaugeRadius, startDeg, endDeg));
+    arc.setAttribute("fill", "none");
+    arc.setAttribute("stroke", m.color);
+    arc.setAttribute("stroke-width", strokeW);
+    arc.setAttribute("stroke-linecap", "round");
+    g.appendChild(arc);
+
+    // Value
+    const val = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    val.setAttribute("x", gx);
+    val.setAttribute("y", gy + 7);
+    val.setAttribute("fill", "#000");
+    val.setAttribute("font-size", "14");
+    val.setAttribute("text-anchor", "middle");
+    val.setAttribute("font-weight", "bold");
+    val.textContent = m.value;
+    g.appendChild(val);
+
+    // Icon (24x24) placed relative to each gauge
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    icon.setAttribute("href", m.icon);
+    icon.setAttribute("width", "24");
+    icon.setAttribute("height", "24");
+    icon.setAttribute("x", gx - 12 + (m.iconOffset?.x ?? 0));
+    icon.setAttribute("y", gy - 12 + (m.iconOffset?.y ?? 0));
+    icon.setAttribute("opacity", "0.95");
+    g.appendChild(icon);
+  });
+</script>
+
+    <div class="legend">
+      <h3 style="color: #fff; margin-bottom: 15px;">Metrics & Colors</h3>
+      <div class="legend-item"><div class="legend-color" style="background: #FF8000;"></div><span>Steps (Top)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #0080FF;"></div><span>Calories (Top-Right)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #00FFFF;"></div><span>Battery (Right)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #A020F0;"></div><span>VO2 Max (Bottom-Right)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #00FF80;"></div><span>Body Battery (Bottom)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #FFFF00;"></div><span>Stress (Bottom-Left)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #FF0040;"></div><span>Heart Rate (Left)</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #FF1493;"></div><span>Recovery (Top-Left)</span></div>
+    </div>
+  </div>
+</body>
+</html>

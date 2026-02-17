@@ -1,0 +1,13 @@
+<resources>
+
+  <bitmap id="ic_steps" filename="icons/ic_steps.png" />
+  <bitmap id="ic_cal" filename="icons/ic_cal.png" />
+  <bitmap id="ic_battery" filename="icons/ic_battery.png" />
+  <bitmap id="ic_vo2" filename="icons/ic_vo2.png" />
+  <bitmap id="ic_body" filename="icons/ic_body.png" />
+  <bitmap id="ic_stress" filename="icons/ic_stress.png" />
+  <bitmap id="ic_hr" filename="icons/ic_hr.png" />
+  <bitmap id="ic_recovery" filename="icons/ic_recovery.png" />
+  <bitmap id="LauncherIcon" filename="icons/launcher_icon.png" />
+
+</resources>

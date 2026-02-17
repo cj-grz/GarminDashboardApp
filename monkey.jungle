@@ -1,0 +1,10 @@
+project.manifest = manifest.xml
+
+# Source files
+base.sourcePath = source
+
+# Resource files (icons, images, etc)
+base.resourcePath = resources
+
+# Target device
+fenix7pro.sourcePath = source
